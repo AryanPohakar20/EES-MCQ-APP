@@ -33,8 +33,10 @@ function buildHome() {
   const grid = document.getElementById('unit-grid');
   grid.innerHTML = '';
 
-  // "All Units" card
-  const total = Object.values(QUESTION_BANK).reduce((s, u) => s + u.questions.length, 0);
+  // Standard units only for "All Units" total
+  const standardUnits = Object.entries(QUESTION_BANK).filter(([id]) => id !== 'ut1' && id !== 'ut2');
+  const total = standardUnits.reduce((s, [id, u]) => s + u.questions.length, 0);
+
   grid.innerHTML += `
     <div class="unit-card unit-card-all" onclick="startQuiz('all')">
       <div class="unit-num">All Units</div>
@@ -42,10 +44,28 @@ function buildHome() {
       <div class="unit-count">${total} Questions · Randomized</div>
     </div>`;
 
+  // UT1 card
+  const ut1Total = QUESTION_BANK['ut1'] ? QUESTION_BANK['ut1'].questions.length : (QUESTION_BANK[1].questions.length + QUESTION_BANK[2].questions.length);
+  grid.innerHTML += `
+    <div class="unit-card unit-card-all" onclick="startQuiz('ut1')">
+      <div class="unit-num">Unit Test 1</div>
+      <div class="unit-title">Unit Test Question Bank 1</div>
+      <div class="unit-count">${ut1Total} Questions · Randomized</div>
+    </div>`;
+
+  // UT2 card
+  const ut2Total = QUESTION_BANK['ut2'] ? QUESTION_BANK['ut2'].questions.length : (QUESTION_BANK[3].questions.length + QUESTION_BANK[4].questions.length + QUESTION_BANK[5].questions.length);
+  grid.innerHTML += `
+    <div class="unit-card unit-card-all" onclick="startQuiz('ut2')">
+      <div class="unit-num">Unit Test 2</div>
+      <div class="unit-title">Unit Test Question Bank 2</div>
+      <div class="unit-count">${ut2Total} Questions · Randomized</div>
+    </div>`;
+
   // Individual unit cards
-  Object.entries(QUESTION_BANK).forEach(([id, unit]) => {
+  standardUnits.forEach(([id, unit]) => {
     grid.innerHTML += `
-      <div class="unit-card" onclick="startQuiz(${id})">
+      <div class="unit-card" onclick="startQuiz('${id}')">
         <div class="unit-num">Unit ${id}</div>
         <div class="unit-title">${unit.title}</div>
         <div class="unit-count">${unit.questions.length} Questions</div>
@@ -60,9 +80,24 @@ function startQuiz(unitId) {
   currentUnit = unitId;
 
   if (unitId === 'all') {
-    // Combine all questions, shuffle
-    const all = Object.values(QUESTION_BANK).flatMap(u => u.questions);
+    // Combine standard questions, shuffle
+    const standardUnits = Object.entries(QUESTION_BANK).filter(([id]) => id !== 'ut1' && id !== 'ut2');
+    const all = standardUnits.flatMap(([id, u]) => u.questions);
     quizQuestions = shuffle(all);
+  } else if (unitId === 'ut1') {
+    if (QUESTION_BANK['ut1']) {
+      quizQuestions = shuffle(QUESTION_BANK['ut1'].questions);
+    } else {
+      const ut1 = [QUESTION_BANK[1], QUESTION_BANK[2]].flatMap(u => u.questions);
+      quizQuestions = shuffle(ut1);
+    }
+  } else if (unitId === 'ut2') {
+    if (QUESTION_BANK['ut2']) {
+      quizQuestions = shuffle(QUESTION_BANK['ut2'].questions);
+    } else {
+      const ut2 = [QUESTION_BANK[3], QUESTION_BANK[4], QUESTION_BANK[5]].flatMap(u => u.questions);
+      quizQuestions = shuffle(ut2);
+    }
   } else {
     quizQuestions = shuffle(QUESTION_BANK[unitId].questions);
   }
@@ -74,9 +109,15 @@ function startQuiz(unitId) {
 
   // Set unit tag
   const tag = document.getElementById('quiz-unit-tag');
-  tag.textContent = unitId === 'all'
-    ? 'All Units — Full Test'
-    : `Unit ${unitId} — ${QUESTION_BANK[unitId].title}`;
+  if (unitId === 'all') {
+    tag.textContent = 'All Units — Full Test';
+  } else if (unitId === 'ut1') {
+    tag.textContent = QUESTION_BANK['ut1'] ? `Unit Test 1 — ${QUESTION_BANK['ut1'].title}` : 'Unit Test 1 — Question Bank 1';
+  } else if (unitId === 'ut2') {
+    tag.textContent = QUESTION_BANK['ut2'] ? `Unit Test 2 — ${QUESTION_BANK['ut2'].title}` : 'Unit Test 2 — Question Bank 2';
+  } else {
+    tag.textContent = `Unit ${unitId} — ${QUESTION_BANK[unitId].title}`;
+  }
 
   renderQuestion();
   showScreen('screen-quiz');
