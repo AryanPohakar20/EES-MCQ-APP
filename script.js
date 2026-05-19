@@ -68,7 +68,7 @@ function buildHome() {
       <div class="unit-card" onclick="startQuiz('${id}')">
         <div class="unit-num">Unit ${id}</div>
         <div class="unit-title">${unit.title}</div>
-        <div class="unit-count">${unit.questions.length} Questions</div>
+        <div class="unit-count">${unit.questions.length} Questions · Randomized</div>
       </div>`;
   });
 }
